@@ -76,11 +76,11 @@ action_t action_for_keycode(uint16_t keycode) {
         case QK_MODS ... QK_MODS_MAX:;
             // Has a modifier
             // Split it up
-            action.code = ACTION_MODS_KEY(keycode >> 8, keycode & 0xFF); // adds modifier to key
+            action.code = ACTION_MODS_KEY(mod_config(keycode >> 8), keycode_config(keycode & 0xFF)); // adds modifier to key
             break;
 #ifndef NO_ACTION_LAYER
         case QK_LAYER_TAP ... QK_LAYER_TAP_MAX:
-            action.code = ACTION_LAYER_TAP_KEY((keycode >> 0x8) & 0xF, keycode & 0xFF);
+            action.code = ACTION_LAYER_TAP_KEY((keycode >> 0x8) & 0xF, keycode_config(keycode & 0xFF));
             break;
         case QK_TO ... QK_TO_MAX:;
             // Layer set "GOTO"
@@ -128,12 +128,12 @@ action_t action_for_keycode(uint16_t keycode) {
 #ifndef NO_ACTION_TAPPING
         case QK_MOD_TAP ... QK_MOD_TAP_MAX:
             mod         = mod_config((keycode >> 0x8) & 0x1F);
-            action.code = ACTION_MODS_TAP_KEY(mod, keycode & 0xFF);
+            action.code = ACTION_MODS_TAP_KEY(mod, keycode_config(keycode & 0xFF));
             break;
 #endif
 #ifdef SWAP_HANDS_ENABLE
         case QK_SWAP_HANDS ... QK_SWAP_HANDS_MAX:
-            action.code = ACTION(ACT_SWAP_HANDS, keycode & 0xff);
+            action.code = ACTION(ACT_SWAP_HANDS, keycode_config(keycode & 0xff));
             break;
 #endif
 
