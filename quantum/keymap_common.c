@@ -135,21 +135,21 @@ action_t action_for_keycode(uint16_t keycode) {
 #endif
 #ifndef NO_ACTION_TAPPING
         case QK_MOD_TAP ... QK_MOD_TAP_MAX:
-            mod         = mod_config((keycode >> 0x8) & 0x1F);
-#ifdef MAGIC_ENFORCE_HANDLING
+            mod = mod_config((keycode >> 0x8) & 0x1F);
+#    ifdef MAGIC_ENFORCE_HANDLING
             action.code = ACTION_MODS_TAP_KEY(mod, keycode_config(keycode & 0xFF));
-#else
+#    else // MAGIC_ENFORCE_HANDLING
             action.code = ACTION_MODS_TAP_KEY(mod, keycode & 0xFF);
-#endif
+#    endif // MAGIC_ENFORCE_HANDLING
             break;
 #endif
 #ifdef SWAP_HANDS_ENABLE
         case QK_SWAP_HANDS ... QK_SWAP_HANDS_MAX:
-#ifdef MAGIC_ENFORCE_HANDLING
+#    ifdef MAGIC_ENFORCE_HANDLING
             action.code = ACTION(ACT_SWAP_HANDS, keycode_config(keycode & 0xFF));
-#else
+#    else // MAGIC_ENFORCE_HANDLING
             action.code = ACTION(ACT_SWAP_HANDS, keycode & 0xFF);
-#endif
+#    endif // MAGIC_ENFORCE_HANDLING
             break;
 #endif
 
