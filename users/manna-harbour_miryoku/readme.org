@@ -39,7 +39,6 @@ Merging branches can be performed automatically at build time for [[#workflow-bu
 
 Any local changes to existing workflow files should be made independently in commits with messages starting ~[miryoku-github]~ so that they can also be automatically excluded in workflow builds.
 
-
 ** Building
 
 
@@ -768,6 +767,16 @@ For [[#workflow-builds][workflow builds]], use the Build Inputs workflow and bui
 
 Also see [[https://github.com/manna-harbour/miryoku_kmonad][Miryoku KMonad]].
 
+
+*** 𝑥MK
+
+Use Miryoku QMK with any keyboard with [[https://github.com/manna-harbour/xmk][𝑥MK]].
+
+For [[#local-builds][local builds]], merge https://github.com/manna-harbour/qmk_firmware/tree/xmk and build for keyboard ~converter/xmk~.
+
+For [[#workflow-builds][workflow builds]], use the Build Inputs workflow and build with keyboard ~converter/xmk~ and merge ~manna-harbour/qmk_firmware/xmk~, or use the Build Example 𝑥MK workflow.
+
+Also see [[https://github.com/manna-harbour/miryoku_kmonad][Miryoku KMonad]].
 
 ** 
 
