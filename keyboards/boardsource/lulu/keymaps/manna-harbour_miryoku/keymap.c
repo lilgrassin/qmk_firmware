@@ -19,6 +19,19 @@ enum m_layers {
     _FUN,
 };
 
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    // Remap Miryoku's clipboard CTRL+Y to Mac's CMD+SHFT+Z if in Mac mode
+    if (keycode == C(KC_Y) && keymap_config.swap_lctl_lgui && !get_mods()) {
+        if (record->event.pressed) {
+            register_code16(SCMD(KC_Z));
+        } else {
+            unregister_code16(SCMD(KC_Z));
+        }
+        return false;
+    }
+    return true;
+}
+
 #ifdef OLED_ENABLE
 
 void render_base_right_logo(void){
