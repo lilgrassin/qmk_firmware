@@ -6,6 +6,8 @@
 #include QMK_KEYBOARD_H
 #include "oledbitmaps.h"
 
+#include "transactions.h"
+
 enum m_layers {
     _BASE,
     _EXTRA,
@@ -32,7 +34,41 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
+//
+// Sync cmd/ctl swap magic for OLEDs
+//
+
+typedef struct _sync_magic_to_slave_t {
+    bool swap_ctl_gui;
+} sync_magic_to_slave_t;
+
+
+void user_sync_slave_handler(uint8_t in_buflen, const void* in_data, uint8_t out_buflen, void* out_data) {
+    keymap_config.swap_lctl_lgui = ((const sync_magic_to_slave_t*)in_data)->swap_ctl_gui;
+    keymap_config.swap_rctl_rgui = keymap_config.swap_lctl_lgui;
+}
+
+void housekeeping_task_user(void) {
+    if (is_keyboard_master()) {
+        static uint32_t last_sync = 0;
+        static sync_magic_to_slave_t last_config = {0};
+        if (!last_sync || (keymap_config.swap_lctl_lgui != last_config.swap_ctl_gui && timer_elapsed32(last_sync) > 500)){
+            last_config.swap_ctl_gui = keymap_config.swap_lctl_lgui;
+            transaction_rpc_send(USER_SYNC_MAGIC, sizeof(last_config), &last_config);
+            last_sync = timer_read32();
+        }
+    }
+}
+
+void keyboard_post_init_user(void) {
+    transaction_register_rpc(USER_SYNC_MAGIC, user_sync_slave_handler);
+}
+
 #ifdef OLED_ENABLE
+
+//
+// OLED functions
+//
 
 void render_base_right_logo(void){
 	// 'BaseL', 128x32px
@@ -233,12 +269,14 @@ void render_left_layer_state(void) {
 bool oled_task_user(void) {
     if (is_keyboard_left()) {
         render_left_layer_state();
-        if (keymap_config.swap_lctl_lgui){
-			oled_write("swap", false);
-		}
     } else {
 		render_right_layer_state();
 	}
+
+    if (keymap_config.swap_lctl_lgui){
+        oled_write("swap", false);
+    }
+    
     return false;
 }
 
