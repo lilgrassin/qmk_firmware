@@ -5,9 +5,17 @@
     // Configure glob patterns for excluding files and folders.
     "files.exclude": {
         "**/.build": true,
-        "**/*.hex": true,
         "**/*.bin": true,
-        "**/*.uf2": true
+        "**/*.hex": true,
+        "**/*.uf2": true,
+        "keyboards/[^b]*": true,
+        "keyboards/b[^o]*": true,
+        "keyboards/bo[^a]*": true,
+        "keyboards/board[^s]*": true,
+        "keyboards/boardsource/[^l]*": true,
+        "users/[^m]*": true,
+        "users/m[^a]*": true,
+        "users/ma[^n]*": true
     },
     "files.associations": {
         "*.h": "c",
