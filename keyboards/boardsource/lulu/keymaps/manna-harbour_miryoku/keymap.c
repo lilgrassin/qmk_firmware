@@ -4,7 +4,6 @@
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include QMK_KEYBOARD_H
-#include "oledbitmaps.h"
 
 #include "transactions.h"
 
@@ -64,205 +63,149 @@ void keyboard_post_init_user(void) {
     transaction_register_rpc(USER_SYNC_MAGIC, user_sync_slave_handler);
 }
 
-#ifdef OLED_ENABLE
-
 //
 // OLED functions
 //
+#ifdef OLED_ENABLE
 
-void render_base_right_logo(void){
-	// 'BaseL', 128x32px
-	static const char PROGMEM layer_logo[] = {
-		LULU_MIRYOKU_BASER
-	};
-
-    oled_write_raw_P(layer_logo, sizeof(layer_logo));
+oled_rotation_t oled_init_user(oled_rotation_t rotation) {
+  if (!is_keyboard_master()) {
+    // cancel out lulu defaults
+    return OLED_ROTATION_0;
+  }
+  return rotation;
 }
 
-void render_base_left_logo(void){
-	// 'BaseL', 128x32px
-	static const char PROGMEM layer_logo[] = {
-		LULU_MIRYOKU_BASEL
-	};
+// osmagic 1*8+4
+static const char PROGMEM osmagic_bitmaps[2][2][16] = {
+    // Win
+    {{0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0x00, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0x00},
+     {0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0x00, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0x00}}
+    , // Mac
+    {{0x70, 0xf8, 0xf8, 0xfc, 0xfc, 0xfe, 0xfe, 0xfe, 0xfe, 0xfc, 0xfc, 0x78, 0x00, 0x00, 0x00, 0x00},
+     {0x1c, 0x3f, 0x7f, 0x7f, 0x3f, 0x1f, 0x1f, 0x1f, 0x1f, 0x3f, 0x7f, 0x3c, 0x01, 0x03, 0x06, 0x04}}
+};
 
-    oled_write_raw_P(layer_logo, sizeof(layer_logo));
-}
+// lock 13*8+4
+static const char PROGMEM lock_bitmaps[2][2][16] = {
+    {{0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0x00, 0x00, 0x10, 0x30, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00},
+     {0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x08, 0x08, 0x08, 0x0c, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00}}
+    ,
+    {{0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0x10, 0x10, 0x30, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+     {0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x08, 0x08, 0x0c, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}
+};
 
-void render_mouse_right_logo(void){
-	// 'Mouse', 128x32px
-	static const char PROGMEM layer_logo[] = {
-		LULU_MIRYOKU_MOUSER
-	};
+static const char PROGMEM right_bitmaps[3][2][2][16] = {
+    { // media 4*8+4
+        {{0x00, 0x00, 0x0c, 0x1c, 0x34, 0x64, 0xc4, 0x84, 0x84, 0xc4, 0x64, 0x34, 0x1c, 0x0c, 0x00, 0x00},
+         {0x00, 0x00, 0x36, 0x36, 0x36, 0x36, 0x36, 0x37, 0x37, 0x36, 0x36, 0x36, 0x36, 0x36, 0x00, 0x00}}
+        ,
+        {{0xfe, 0xff, 0xf3, 0xe3, 0xcb, 0x9b, 0x3b, 0x7b, 0x7b, 0x3b, 0x9b, 0xcb, 0xe3, 0xf3, 0xff, 0xfe},
+         {0x7f, 0xff, 0xc9, 0xc9, 0xc9, 0xc9, 0xc9, 0xc8, 0xc8, 0xc9, 0xc9, 0xc9, 0xc9, 0xc9, 0xff, 0x7f}}
+    }, 
+    { // nav 7*8+4
+        {{0x00, 0x00, 0xe0, 0x70, 0x18, 0x6c, 0xec, 0xc4, 0xc4, 0x8c, 0x0c, 0x18, 0x70, 0xe0, 0x00, 0x00},
+         {0x00, 0x00, 0x07, 0x0e, 0x18, 0x30, 0x31, 0x23, 0x22, 0x37, 0x36, 0x18, 0x0e, 0x07, 0x00, 0x00}}
+        ,
+        {{0xfe, 0xff, 0x1f, 0x8f, 0xe7, 0x93, 0x13, 0x3b, 0x3b, 0x73, 0xf3, 0xe7, 0x8f, 0x1f, 0xff, 0xfe},
+         {0x7f, 0xff, 0xf8, 0xf1, 0xe7, 0xcf, 0xce, 0xdc, 0xdd, 0xc8, 0xc9, 0xe7, 0xf1, 0xf8, 0xff, 0x7f}}
+    },   
+    { // mouse 10*8+4
+        {{0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x70, 0xe0, 0xc0, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+         {0x00, 0x00, 0x18, 0x1c, 0x16, 0x13, 0x10, 0x10, 0x11, 0x13, 0x17, 0x1e, 0x1c, 0x18, 0x00, 0x00}}
+        ,
+        {{0xfe, 0xff, 0xff, 0xff, 0xff, 0x07, 0xc7, 0x8f, 0x1f, 0x3f, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xfe},
+         {0x7f, 0xff, 0xf3, 0xf1, 0xf4, 0xf6, 0xf7, 0xf7, 0xf7, 0xf6, 0xf4, 0xf0, 0xf1, 0xf3, 0xff, 0x7f}}
+    }
+};
 
-    oled_write_raw_P(layer_logo, sizeof(layer_logo));
-}
+static const char PROGMEM left_bitmaps[3][2][2][16] = {
+    { // fun 4*8+4
+        {{0x00, 0x00, 0x8c, 0x8c, 0x8c, 0x8c, 0x8c, 0xfc, 0xfc, 0x0c, 0x0c, 0x0c, 0xfc, 0xf8, 0x00, 0x00},
+         {0x00, 0x00, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x3f, 0x1f, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00}}
+        ,
+        {{0xfe, 0xff, 0x73, 0x73, 0x73, 0x73, 0x73, 0x03, 0x03, 0xf3, 0xf3, 0xf3, 0x03, 0x07, 0xff, 0xfe},
+         {0x7f, 0xff, 0x9e, 0x9e, 0x9e, 0x9e, 0x9e, 0x9e, 0xc0, 0xe0, 0xff, 0xff, 0xfc, 0xfe, 0xff, 0x7f}}
+    },
+    { // num 7*8+4
+        {{0x00, 0x00, 0xe0, 0x70, 0x10, 0x00, 0x00, 0x80, 0x80, 0x00, 0x00, 0x30, 0xe0, 0xc0, 0x00, 0x00},
+         {0x00, 0x00, 0x03, 0x06, 0x0c, 0x0c, 0x0e, 0x07, 0x03, 0x06, 0x0e, 0x0e, 0x07, 0x03, 0x00, 0x00}}
+        ,
+        {{0xfe, 0xff, 0x1f, 0x8f, 0xef, 0xff, 0xff, 0x7f, 0x7f, 0xff, 0xff, 0xcf, 0x1f, 0x3f, 0xff, 0xfe},
+         {0x7f, 0xff, 0xfc, 0xf9, 0xf3, 0xf3, 0xf1, 0xf8, 0xfc, 0xf9, 0xf1, 0xf1, 0xf8, 0xfc, 0xff, 0x7f}}
+    },
+    { // sym 10*8+4
+        {{0x00, 0x00, 0xf0, 0x38, 0x18, 0x18, 0x38, 0xf0, 0xe0, 0xf0, 0x30, 0x10, 0x30, 0xe0, 0x00, 0x00},
+         {0x00, 0x00, 0x19, 0x0f, 0x06, 0x0e, 0x0b, 0x19, 0x00, 0x01, 0x03, 0x02, 0x03, 0x01, 0x00, 0x00}}
+        ,
+        {{0xfe, 0xff, 0x0f, 0xc7, 0xe7, 0xe7, 0xc7, 0x0f, 0x1f, 0x0f, 0xcf, 0xef, 0xcf, 0x1f, 0xff, 0xfe},
+         {0x7f, 0xff, 0xe6, 0xf0, 0xf9, 0xf1, 0xf4, 0xe6, 0xff, 0xfe, 0xfc, 0xfd, 0xfc, 0xfe, 0xff, 0x7f}}
+    }
+};
 
-void render_mouse_left_logo(void){
-	// 'Mouse', 128x32px
-	static const char PROGMEM layer_logo[] = {
-		LULU_MIRYOKU_MOUSEL
-	};
-
-    oled_write_raw_P(layer_logo, sizeof(layer_logo));
-}
-
-void render_nav_right_logo(void){
-	// 'Nav', 128x32px
-	static const char PROGMEM layer_logo[] = {
-		LULU_MIRYOKU_NAVR
-	};
-
-    oled_write_raw_P(layer_logo, sizeof(layer_logo));
-}
-
-void render_nav_left_logo(void){
-	// 'Nav', 128x32px
-	static const char PROGMEM layer_logo[] = {
-		LULU_MIRYOKU_NAVL
-	};
-
-    oled_write_raw_P(layer_logo, sizeof(layer_logo));
-}
-
-void render_media_right_logo(void){
-	// 'Media', 128x32px
-	static const char PROGMEM layer_logo[] = {
-		LULU_MIRYOKU_MEDIAR
-	};
-
-    oled_write_raw_P(layer_logo, sizeof(layer_logo));
-}
-
-void render_media_left_logo(void){
-	// 'Media', 128x32px
-	static const char PROGMEM layer_logo[] = {
-		LULU_MIRYOKU_MEDIAL
-	};
-
-    oled_write_raw_P(layer_logo, sizeof(layer_logo));
-}
-
-void render_sym_right_logo(void){
-	// 'Sym', 128x32px
-	static const char PROGMEM layer_logo[] = {
-		LULU_MIRYOKU_SYMR
-	};
-
-    oled_write_raw_P(layer_logo, sizeof(layer_logo));
-}
-
-void render_sym_left_logo(void){
-	// 'Sym', 128x32px
-	static const char PROGMEM layer_logo[] = {
-		LULU_MIRYOKU_SYML
-	};
-
-    oled_write_raw_P(layer_logo, sizeof(layer_logo));
-}
-
-void render_num_right_logo(void){
-    // 'Num', 128x32px
-	static const char PROGMEM layer_logo[] = {
-		LULU_MIRYOKU_NUMR
-	};
-
-    oled_write_raw_P(layer_logo, sizeof(layer_logo));
-}
-
-void render_num_left_logo(void){
-    // 'Num', 128x32px
-	static const char PROGMEM layer_logo[] = {
-		LULU_MIRYOKU_NUML
-	};
-
-    oled_write_raw_P(layer_logo, sizeof(layer_logo));
-}
-
-void render_fun_right_logo(void){
-	// 'Fun', 128x32px
-	static const char PROGMEM layer_logo[] = {
-		LULU_MIRYOKU_FUNR
-	};
-
-    oled_write_raw_P(layer_logo, sizeof(layer_logo));
-}
-
-void render_fun_left_logo(void){
-	// 'Fun', 128x32px
-	static const char PROGMEM layer_logo[] = {
-		LULU_MIRYOKU_FUNL
-	};
-
-    oled_write_raw_P(layer_logo, sizeof(layer_logo));
-}
-
+#define OSMAGIC_ICON_BASE 1
+#define LAYER_ICONS_BASE 6
+#define LOCK_ICON_BASE 19
+#define ICON_LN_OFFSET 1 
 
 void render_right_layer_state(void) {
+    bool os_magic = keymap_config.swap_lctl_lgui;
+    bool lock = get_highest_layer(default_layer_state) > _BASE;
+    bool active;
+    int layer = -1;
+
     switch (get_highest_layer(layer_state | default_layer_state)) {
-		case _BASE:
-            render_base_right_logo();
-            break;
-        case _EXTRA:
-            oled_write("Extra", false);
-            break;
-        case _TAP:
-            oled_write("Tap", false);
-            break;
-        case _BUTTON:
-            oled_write("Button", false);
+        case _MEDIA:
+            layer = 0;
             break;
         case _NAV:
-            render_nav_right_logo();
+            layer = 1;
             break;
         case _MOUSE:
-            render_mouse_right_logo();
+            layer = 2;
             break;
-        case _MEDIA:
-            render_media_right_logo();
-            break;
-        case _NUM:
-            render_num_right_logo();
-            break;
-        case _SYM:
-            render_sym_right_logo();
-            break;
-        case _FUN:
-            render_fun_right_logo();
-            break;
+    }
+
+    for (int ln = 0; ln < 2; ++ln) {
+        oled_set_cursor(OSMAGIC_ICON_BASE, ln + ICON_LN_OFFSET);
+        oled_write_raw_P(osmagic_bitmaps[os_magic][ln], sizeof(osmagic_bitmaps[os_magic][ln]));
+        for (int i = 0; i < 3; ++i) {
+            active = layer == i;
+            oled_set_cursor(LAYER_ICONS_BASE + (i * 4), ln + ICON_LN_OFFSET);
+            oled_write_raw_P(right_bitmaps[i][active][ln], sizeof(right_bitmaps[i][active][ln]));
+        }
+        oled_set_cursor(LOCK_ICON_BASE, ln + ICON_LN_OFFSET);
+        oled_write_raw_P(lock_bitmaps[lock][ln], sizeof(lock_bitmaps[lock][ln]));
     }
 }
 void render_left_layer_state(void) {
+    bool os_magic = keymap_config.swap_lctl_lgui;
+    bool lock = get_highest_layer(default_layer_state) > _BASE;
+    bool active;
+    int layer = -1;
+
     switch (get_highest_layer(layer_state | default_layer_state)) {
-        case _BASE:
-            render_base_left_logo();
-            break;
-        case _EXTRA:
-            oled_write("Extra", false);
-            break;
-        case _TAP:
-            oled_write("Tap", false);
-            break;
-        case _BUTTON:
-            oled_write("Button", false);
-            break;
-        case _NAV:
-            render_nav_left_logo();
-            break;
-        case _MOUSE:
-            render_mouse_left_logo();
-            break;
-        case _MEDIA:
-            render_media_left_logo();
+        case _FUN:
+            layer = 0;
             break;
         case _NUM:
-            render_num_left_logo();
+            layer = 1;
             break;
         case _SYM:
-            render_sym_left_logo();
+            layer = 2;
             break;
-        case _FUN:
-            render_fun_left_logo();
-            break;
+    }
+
+    for (int ln = 0; ln < 2; ++ln) {
+        oled_set_cursor(OSMAGIC_ICON_BASE, ln + ICON_LN_OFFSET);
+        oled_write_raw_P(osmagic_bitmaps[os_magic][ln], sizeof(osmagic_bitmaps[os_magic][ln]));
+        for (int i = 0; i < 3; ++i) {
+            active = layer == i;
+            oled_set_cursor(LAYER_ICONS_BASE + (i * 4), ln + ICON_LN_OFFSET);
+            oled_write_raw_P(left_bitmaps[i][active][ln], sizeof(left_bitmaps[i][active][ln]));
+        }
+        oled_set_cursor(LOCK_ICON_BASE, ln + ICON_LN_OFFSET);
+        oled_write_raw_P(lock_bitmaps[lock][ln], sizeof(lock_bitmaps[lock][ln]));
     }
 }
 
@@ -272,11 +215,6 @@ bool oled_task_user(void) {
     } else {
 		render_right_layer_state();
 	}
-
-    if (keymap_config.swap_lctl_lgui){
-        oled_write("swap", false);
-    }
-    
     return false;
 }
 
