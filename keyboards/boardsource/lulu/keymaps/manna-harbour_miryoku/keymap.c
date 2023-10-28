@@ -33,6 +33,154 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
+bool get_custom_auto_shifted_key(uint16_t keycode, keyrecord_t *record) {
+    switch(keycode) {
+        case KC_AMPR:
+        case KC_ASTR:
+        case KC_AT:
+        case KC_CIRC:
+        case KC_COLN:
+        case KC_DLR:
+        case KC_EXLM:
+        case KC_HASH:
+        case KC_LABK:
+        case KC_LCBR:
+        case KC_PERC:
+        case KC_PIPE:
+        case KC_PLUS:
+        case KC_QUES:
+        case KC_RABK:
+        case KC_RCBR:
+        case KC_TILD:
+            return true;
+        default:
+            return false;
+    }
+}
+
+#define U_CASE_REGISTER_AUTOSHIFT(KEY, SHIFTED) \
+case KEY: register_code16((!shifted) ? KEY : SHIFTED); break;
+
+void autoshift_press_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
+    switch(keycode) {
+        U_CASE_REGISTER_AUTOSHIFT(KC_0, KC_SCLN)
+        U_CASE_REGISTER_AUTOSHIFT(KC_1, KC_ASTR)
+        U_CASE_REGISTER_AUTOSHIFT(KC_2, KC_RCBR)
+        U_CASE_REGISTER_AUTOSHIFT(KC_3, KC_RBRC)
+        U_CASE_REGISTER_AUTOSHIFT(KC_4, KC_MINS)
+        U_CASE_REGISTER_AUTOSHIFT(KC_5, KC_EQL)
+        U_CASE_REGISTER_AUTOSHIFT(KC_6, KC_RABK)
+        U_CASE_REGISTER_AUTOSHIFT(KC_7, KC_PLUS)
+        U_CASE_REGISTER_AUTOSHIFT(KC_8, KC_LCBR)
+        U_CASE_REGISTER_AUTOSHIFT(KC_9, KC_LBRC)
+        U_CASE_REGISTER_AUTOSHIFT(KC_AMPR, KC_DLR)
+        U_CASE_REGISTER_AUTOSHIFT(KC_ASTR, KC_1)
+        U_CASE_REGISTER_AUTOSHIFT(KC_AT, KC_LABK)
+        U_CASE_REGISTER_AUTOSHIFT(KC_BSLS, KC_GRV)
+        U_CASE_REGISTER_AUTOSHIFT(KC_CIRC, KC_TILD)
+        U_CASE_REGISTER_AUTOSHIFT(KC_COLN, KC_PIPE)
+        U_CASE_REGISTER_AUTOSHIFT(KC_COMM, KC_LPRN)
+        U_CASE_REGISTER_AUTOSHIFT(KC_DLR, KC_AMPR)
+        U_CASE_REGISTER_AUTOSHIFT(KC_EQL, KC_5)
+        U_CASE_REGISTER_AUTOSHIFT(KC_EXLM, KC_QUES)
+        U_CASE_REGISTER_AUTOSHIFT(KC_GRV, KC_BSLS)
+        U_CASE_REGISTER_AUTOSHIFT(KC_HASH, KC_PERC)
+        U_CASE_REGISTER_AUTOSHIFT(KC_LABK, KC_AT)
+        U_CASE_REGISTER_AUTOSHIFT(KC_LBRC, KC_9)
+        U_CASE_REGISTER_AUTOSHIFT(KC_LCBR, KC_8)
+        U_CASE_REGISTER_AUTOSHIFT(KC_PERC, KC_HASH)
+        U_CASE_REGISTER_AUTOSHIFT(KC_PIPE, KC_COLN)
+        U_CASE_REGISTER_AUTOSHIFT(KC_PLUS, KC_7)
+        U_CASE_REGISTER_AUTOSHIFT(KC_QUES, KC_EXLM)
+        U_CASE_REGISTER_AUTOSHIFT(KC_RABK, KC_6)
+        U_CASE_REGISTER_AUTOSHIFT(KC_RBRC, KC_3)
+        U_CASE_REGISTER_AUTOSHIFT(KC_RCBR, KC_2)
+        U_CASE_REGISTER_AUTOSHIFT(KC_SCLN, KC_0)
+        U_CASE_REGISTER_AUTOSHIFT(KC_SLSH, KC_DOT)
+        U_CASE_REGISTER_AUTOSHIFT(KC_TILD, KC_CIRC)
+        case KC_DOT:
+            if (layer_state_cmp(layer_state | default_layer_state, _NUM)) {
+                register_code16((!shifted) ? KC_DOT : KC_SLSH);
+            } else {
+                register_code16((!shifted) ? KC_DOT : KC_RPRN);
+            }
+            break;
+        case KC_MINS:
+            if (layer_state_cmp(layer_state | default_layer_state, _SYM)) {
+                register_code16((!shifted) ? KC_MINS : KC_4);
+                break;
+            }
+            // fallthrough otherwise
+        default:
+            if (shifted) {
+                add_weak_mods(MOD_BIT(KC_LSFT));
+            }
+            // & 0xFF gets the Tap key for Tap Holds, required when using Retro Shift
+            register_code16((IS_RETRO(keycode)) ? keycode & 0xFF : keycode);
+    }
+}
+
+#define U_CASE_UNREGISTER_AUTOSHIFT(KEY, SHIFTED) \
+case KEY: unregister_code16((!shifted) ? KEY : SHIFTED); break;
+
+void autoshift_release_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
+    switch(keycode) {
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_0, KC_SCLN)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_1, KC_ASTR)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_2, KC_RCBR)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_3, KC_RBRC)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_4, KC_MINS)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_5, KC_EQL)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_6, KC_RABK)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_7, KC_PLUS)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_8, KC_LCBR)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_9, KC_LBRC)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_AMPR, KC_DLR)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_ASTR, KC_1)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_AT, KC_LABK)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_BSLS, KC_GRV)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_CIRC, KC_TILD)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_COLN, KC_PIPE)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_COMM, KC_LPRN)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_DLR, KC_AMPR)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_EQL, KC_5)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_EXLM, KC_QUES)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_GRV, KC_BSLS)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_HASH, KC_PERC)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_LABK, KC_AT)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_LBRC, KC_9)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_LCBR, KC_8)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_PERC, KC_HASH)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_PIPE, KC_COLN)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_PLUS, KC_7)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_QUES, KC_EXLM)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_RABK, KC_6)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_RBRC, KC_3)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_RCBR, KC_2)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_SCLN, KC_0)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_SLSH, KC_DOT)
+        U_CASE_UNREGISTER_AUTOSHIFT(KC_TILD, KC_CIRC)
+        case KC_DOT:
+            if (layer_state_cmp(layer_state | default_layer_state, _NUM)) {
+                unregister_code16((!shifted) ? KC_DOT : KC_SLSH);
+            } else {
+                unregister_code16((!shifted) ? KC_DOT : KC_RPRN);
+            }
+            break;
+        case KC_MINS:
+            if (layer_state_cmp(layer_state | default_layer_state, _SYM)) {
+                unregister_code16((!shifted) ? KC_MINS : KC_4);
+                break;
+            }
+            // fallthrough otherwise
+        default:
+            // & 0xFF gets the Tap key for Tap Holds, required when using Retro Shift
+            // The IS_RETRO check isn't really necessary here, always using
+            // keycode & 0xFF would be fine.
+            unregister_code16((IS_RETRO(keycode)) ? keycode & 0xFF : keycode);
+    }
+}
+
 //
 // Sync cmd/ctl swap magic for OLEDs
 //
