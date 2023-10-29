@@ -185,6 +185,10 @@ void autoshift_release_user(uint16_t keycode, bool shifted, keyrecord_t *record)
 // Sync cmd/ctl swap magic for OLEDs
 //
 
+// Slave half wakes after the master and will miss the initial sync if not delayed
+#define U_WAKE_DELAY 2250
+#define U_SYNC_DELAY 500
+
 typedef struct _sync_magic_to_slave_t {
     bool swap_ctl_gui;
 } sync_magic_to_slave_t;
@@ -199,7 +203,7 @@ void housekeeping_task_user(void) {
     if (is_keyboard_master()) {
         static uint32_t last_sync = 0;
         static sync_magic_to_slave_t last_config = {0};
-        if (!last_sync || (keymap_config.swap_lctl_lgui != last_config.swap_ctl_gui && timer_elapsed32(last_sync) > 500)){
+        if ((!last_sync || (keymap_config.swap_lctl_lgui != last_config.swap_ctl_gui)) && timer_elapsed32(last_sync) > (last_sync ? U_SYNC_DELAY : U_WAKE_DELAY)){
             last_config.swap_ctl_gui = keymap_config.swap_lctl_lgui;
             transaction_rpc_send(USER_SYNC_MAGIC, sizeof(last_config), &last_config);
             last_sync = timer_read32();
@@ -207,9 +211,13 @@ void housekeeping_task_user(void) {
     }
 }
 
+
 void keyboard_post_init_user(void) {
     transaction_register_rpc(USER_SYNC_MAGIC, user_sync_slave_handler);
 }
+
+#undef U_WAKE_DELAY
+#undef U_SYNC_DELAY
 
 //
 // OLED functions
@@ -326,6 +334,7 @@ void render_right_layer_state(void) {
         oled_write_raw_P(lock_bitmaps[lock][ln], sizeof(lock_bitmaps[lock][ln]));
     }
 }
+
 void render_left_layer_state(void) {
     bool os_magic = keymap_config.swap_lctl_lgui;
     bool lock = get_highest_layer(default_layer_state) > _BASE;
