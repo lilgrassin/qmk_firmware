@@ -54,14 +54,14 @@ MIRYOKU_LAYER_LIST
 const key_override_t capsword_key_override = ko_make_basic(MOD_MASK_SHIFT, CW_TOGG, KC_CAPS);
 
 #define KEYCODE_OVERRIDE_X(NAME, MAKE_FN, ...) const key_override_t NAME##_key_override = MAKE_FN( __VA_ARGS__ );
-U_CUSTOM_KEYCODE_OVERRIDE_LIST
+CUSTOM_KEYCODE_OVERRIDE_LIST
 #undef KEYCODE_OVERRIDE_X
 
 // This globally defines all key overrides to be used
 const key_override_t **key_overrides = (const key_override_t *[]){
     &capsword_key_override,
 #define KEYCODE_OVERRIDE_X(NAME, ...) &NAME##_key_override,
-U_CUSTOM_KEYCODE_OVERRIDE_LIST
+CUSTOM_KEYCODE_OVERRIDE_LIST
 #undef KEYCODE_OVERRIDE_X
     NULL
 };
