@@ -349,3 +349,27 @@ bool oled_task_user(void) {
 }
 
 #endif
+
+//
+// Encoders
+
+#ifdef ENCODER_ENABLE
+
+bool encoder_update_user(uint8_t index, bool clockwise) {
+    if (index == 0) {
+        if (clockwise) {
+            tap_code(KC_VOLU);
+        } else {
+            tap_code(KC_VOLD);
+        }
+    } else if (index == 1) {
+        if (clockwise) {
+            rgb_matrix_increase_val_noeeprom();
+        } else {
+            rgb_matrix_decrease_val_noeeprom();
+        }
+    }
+    return false;
+}
+
+#endif
