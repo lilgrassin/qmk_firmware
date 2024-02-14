@@ -203,28 +203,25 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 // Sync cmd/ctl swap magic for OLEDs
 //
 
-// Slave half wakes after the master and will miss the initial sync if not delayed
-#    define WAKE_DELAY 2250
-#    define SYNC_DELAY 500
-
-typedef struct _sync_magic_t {
-    bool swap_ctl_gui;
-} sync_magic_t;
+#    define SYNC_INTERVAL 500
 
 void user_sync_slave_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
-    keymap_config.swap_lctl_lgui = ((const sync_magic_t *)in_data)->swap_ctl_gui;
+    keymap_config.swap_lctl_lgui = *((const bool *)in_data);
     keymap_config.swap_rctl_rgui = keymap_config.swap_lctl_lgui;
 }
 
 void housekeeping_task_user(void) {
     if (is_keyboard_master()) {
-        static uint32_t     last_sync   = 0;
-        static sync_magic_t last_config = {0};
+        static uint32_t last_sync = 0;
+        static bool     swapped   = false;
+        bool            swapped_sync;
 
-        if ((!last_sync || (keymap_config.swap_lctl_lgui != last_config.swap_ctl_gui)) && timer_elapsed32(last_sync) > (last_sync ? SYNC_DELAY : WAKE_DELAY)) {
-            last_config.swap_ctl_gui = keymap_config.swap_lctl_lgui;
-            transaction_rpc_send(USER_SYNC_MAGIC, sizeof(last_config), &last_config);
-            last_sync = timer_read32();
+        if (swapped != keymap_config.swap_lctl_lgui && timer_elapsed32(last_sync) > SYNC_INTERVAL) {
+            swapped_sync = keymap_config.swap_lctl_lgui;
+            if (transaction_rpc_send(USER_SYNC_MAGIC, sizeof(swapped_sync), &swapped_sync)) {
+                swapped   = swapped_sync;
+                last_sync = timer_read32();
+            }
         }
     }
 }
